@@ -16,8 +16,8 @@ services:
             args:
                 TIMEZONE: ${TIMEZONE}
         volumes:
-            - ${SYMFONY_APP_PATH}:/var/www/symfony
-            - ./logs/symfony:/var/www/symfony/app/logs
+            - ${SYMFONY_APP_PATH}:/var/www/jedisjeux
+            - ./logs/jedisjeux:/var/www/jedisjeux/var/logs
     nginx:
         build: nginx
         ports:
@@ -27,7 +27,7 @@ services:
         volumes:
             - ./logs/nginx/:/var/log/nginx
     elk:
-        image: willdurand/elk
+        image: willdurand/elk:5
         ports:
             - 81:80
         volumes:

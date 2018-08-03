@@ -35,26 +35,17 @@ Docker-symfony gives you everything you need for developing Symfony application.
     1. Update app/config/parameters.yml
 
         ```yml
-        # path/to/your/symfony-project/app/config/parameters.yml
+        # path/to/your/jedisjeux-project/app/config/parameters.yml
         parameters:
             database_host: db
         ```
 
-    2. Composer install & create database
+    2. Install project
 
         ```bash
         $ docker-compose exec php bash
         $ composer install
-        # Symfony2
-        $ sf doctrine:database:create
-        $ sf doctrine:schema:update --force
-        # Only if you have `doctrine/doctrine-fixtures-bundle` installed
-        $ sf doctrine:fixtures:load --no-interaction
-        # Symfony3
-        $ sf3 doctrine:database:create
-        $ sf3 doctrine:schema:update --force
-        # Only if you have `doctrine/doctrine-fixtures-bundle` installed
-        $ sf3 doctrine:fixtures:load --no-interaction
+        # php bin/console app:install
         ```
 
 5. Enjoy :-)
