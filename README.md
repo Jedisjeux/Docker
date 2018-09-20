@@ -1,140 +1,95 @@
-# Docker Symfony (PHP7-FPM - NGINX - MySQL - ELK)
+<p align="center">
+    <img src="d4s.png" />
+</p>
 
-[![Build Status](https://travis-ci.org/maxpou/docker-symfony.svg?branch=master)](https://travis-ci.org/maxpou/docker-symfony)
 
-![](doc/schema.png)
+## Docker environment for [Jedisjeux](https://jedisjeux.net/) Project</h1>
 
-Docker-symfony gives you everything you need for developing Symfony application. This complete stack run with docker and [docker-compose (1.7 or higher)](https://docs.docker.com/compose/).
+For more information on how Jedisjeux works, please read all the [documentation](http://docs.jedisjeux.net)
 
 ## Installation
 
-1. Create a `.env` from the `.env.dist` file. Adapt it according to your symfony application
+1. Clone docker4jedisjeux repository
 
     ```bash
-    cp .env.dist .env
+    $ git clone git@github.com:Jedisjeux/Docker.git jedisjeux-docker
     ```
 
+2. Clone Jedisjeux-Standard repository
+    ```bash
+    $ cd jedisjeux-docker
+    $ git clone git@github.com:Jedisjeux/Jedisjeux.git jedisjeux
+    ```
 
-2. Build/run containers with (with and without detached mode)
+3. Run Docker's containers
+
+   ```bash
+   $ docker-compose up --build -d
+   ```
+
+4. Install Jedisjeux vendors
 
     ```bash
-    $ docker-compose build
-    $ docker-compose up -d
+    $ docker-compose run --rm php composer install
     ```
 
-3. Update your system host file (add symfony.local)
+5. Install Jedisjeux
 
     ```bash
-    # UNIX only: get containers IP address and update host (replace IP according to your configuration) (on Windows, edit C:\Windows\System32\drivers\etc\hosts)
-    $ sudo echo $(docker network inspect bridge | grep Gateway | grep -o -E '[0-9\.]+') "symfony.local" >> /etc/hosts
+    $ docker-compose run --rm php bin/console app:install
     ```
 
-    **Note:** For **OS X**, please take a look [here](https://docs.docker.com/docker-for-mac/networking/) and for **Windows** read [this](https://docs.docker.com/docker-for-windows/#/step-4-explore-the-application-and-run-examples) (4th step).
+6. Install and build assets vendors
 
-4. Prepare Symfony app
-    1. Update app/config/parameters.yml
+    ```bash
+    $ docker-compose run --rm node yarn install
+    ```
+    ```bash
+    $ docker-compose run --rm node yarn build
+    ```
 
-        ```yml
-        # path/to/your/jedisjeux-project/app/config/parameters.yml
-        parameters:
-            database_host: db
-        ```
-
-    2. Install project
-
-        ```bash
-        $ docker-compose exec php bash
-        $ composer install
-        # php bin/console app:install
-        ```
-
-5. Enjoy :-)
-
-## Usage
-
-Just run `docker-compose up -d`, then:
-
-* Symfony app: visit [symfony.local](http://symfony.local)  
-* Symfony dev mode: visit [symfony.local/app_dev.php](http://symfony.local/app_dev.php)  
-* Logs (Kibana): [symfony.local:81](http://symfony.local:81)
-* Logs (files location): logs/nginx and logs/symfony
-
-## Customize
-
-If you want to add optionnals containers like Redis, PHPMyAdmin... take a look on [doc/custom.md](doc/custom.md).
-
-## How it works?
-
-Have a look at the `docker-compose.yml` file, here are the `docker-compose` built images:
-
-* `db`: This is the MySQL database container,
-* `php`: This is the PHP-FPM container in which the application volume is mounted,
-* `nginx`: This is the Nginx webserver container in which application volume is mounted too,
-* `elk`: This is a ELK stack container which uses Logstash to collect logs, send them into Elasticsearch and visualize them with Kibana.
+That's all. Try and fun!!!
 
 This results in the following running containers:
 
 ```bash
 $ docker-compose ps
-           Name                          Command               State              Ports            
---------------------------------------------------------------------------------------------------
-dockersymfony_db_1            /entrypoint.sh mysqld            Up      0.0.0.0:3306->3306/tcp      
-dockersymfony_elk_1           /usr/bin/supervisord -n -c ...   Up      0.0.0.0:81->80/tcp          
-dockersymfony_nginx_1         nginx                            Up      443/tcp, 0.0.0.0:80->80/tcp
-dockersymfony_php_1           php-fpm                          Up      0.0.0.0:9000->9000/tcp      
+         Name                        Command              State                      Ports
+-------------------------------------------------------------------------------------------------------------
+jedisjeux-docker_db_1        docker-entrypoint.sh mysqld      Exit 1                                             
+jedisjeux-docker_elk_1       /usr/bin/supervisord -n -c ...   Up       0.0.0.0:81->80/tcp, 0.0.0.0:9201->9200/tcp
+jedisjeux-docker_nginx_1     nginx -g daemon off;             Exit 1                                             
+jedisjeux-docker_php_1       docker-php-entrypoint php-fpm    Up       9000/tcp                                  
+jedisjeux-docker_php_run_9   docker-php-entrypoint bash       Up       9000/tcp                                  
+jedisjeux-docker_traefik_1   /traefik --api --docker          Up       0.0.0.0:80->80/tcp, 0.0.0.0:8080->8080/tcp
+-----------
 ```
 
-## Useful commands
+## Testing
+
+Inside the standard Jedisjeux modify the behat.yml.dist adding the following:
+
+```yml
+default:
+    extensions:
+        Behat\MinkExtension:
+            base_url: "http://nginx/app_test.php"
+            sessions:
+                selenium2:
+                    selenium2:
+                        wd_host: http://selenium:4444/wd/hub
+```
+And run Behat:
 
 ```bash
-# bash commands
-$ docker-compose exec php bash
-
-# Composer (e.g. composer update)
-$ docker-compose exec php composer update
-
-# SF commands (Tips: there is an alias inside php container)
-$ docker-compose exec php php /var/www/symfony/app/console cache:clear # Symfony2
-$ docker-compose exec php php /var/www/symfony/bin/console cache:clear # Symfony3
-# Same command by using alias
-$ docker-compose exec php bash
-$ sf cache:clear
-
-# Retrieve an IP Address (here for the nginx container)
-$ docker inspect --format '{{ .NetworkSettings.Networks.dockersymfony_default.IPAddress }}' $(docker ps -f name=nginx -q)
-$ docker inspect $(docker ps -f name=nginx -q) | grep IPAddress
-
-# MySQL commands
-$ docker-compose exec db mysql -uroot -p"root"
-
-# F***ing cache/logs folder
-$ sudo chmod -R 777 app/cache app/logs # Symfony2
-$ sudo chmod -R 777 var/cache var/logs var/sessions # Symfony3
-
-# Check CPU consumption
-$ docker stats $(docker inspect -f "{{ .Name }}" $(docker ps -q))
-
-# Delete all containers
-$ docker rm $(docker ps -aq)
-
-# Delete all images
-$ docker rmi $(docker images -q)
+    $ docker-compose run --rm php bin/behat
 ```
+## License
 
-## FAQ
-
-* Got this error: `ERROR: Couldn't connect to Docker daemon at http+docker://localunixsocket - is it running?
-If it's at a non-standard location, specify the URL with the DOCKER_HOST environment variable.` ?  
-Run `docker-compose up -d` instead.
-
-* Permission problem? See [this doc (Setting up Permission)](http://symfony.com/doc/current/book/installation.html#checking-symfony-application-configuration-and-setup)
-
-* How to config Xdebug?
-Xdebug is configured out of the box!
-Just config your IDE to connect port  `9001` and id key `PHPSTORM`
+This bundle is published under the [MIT License](LICENSE)
 
 ## Contributing
 
 First of all, **thank you** for contributing ♥  
-If you find any typo/misconfiguration/... please send me a PR or open an issue. You can also ping me on [twitter](https://twitter.com/_maxpou).  
+If you find any typo/misconfiguration/... please send me a PR or open an issue. You can also ping me on [twitter](https://twitter.com/nietzscheson).  
 Also, while creating your Pull Request on GitHub, please write a description which gives the context and/or explains why you are creating it.

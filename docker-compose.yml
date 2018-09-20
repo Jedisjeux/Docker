@@ -3,36 +3,65 @@ version: '2'
 services:
     db:
         image: mysql
-        volumes:
-            - "./.data/db:/var/lib/mysql"
         environment:
             MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
             MYSQL_DATABASE: ${MYSQL_DATABASE}
             MYSQL_USER: ${MYSQL_USER}
             MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        volumes:
+            - ${PWD}/var/lib/mysql:/var/lib/mysql
+        networks:
+            - jedisjeux
+
     php:
-        build:
-            context: php7-fpm
-            args:
-                TIMEZONE: ${TIMEZONE}
+        build: ${PWD}/.docker/php
         volumes:
-            - ${SYMFONY_APP_PATH}:/var/www/jedisjeux
-            - ./logs/jedisjeux:/var/www/jedisjeux/var/logs
+            - jedisjeux:/var/www/jedisjeux
+        environment:
+            - JEDISJEUX_DATABASE_HOST=db
+            - JEDISJEUX_DATABASE_NAME=${MYSQL_DATABASE}
+            - JEDISJEUX_DATABASE_USER=${MYSQL_USER}
+            - JEDISJEUX_DATABASE_PASSWORD=${MYSQL_PASSWORD}
+            - PHP_DATE_TIMEZONE=${TIMEZONE}
+            - PHP_MEMORY_LIMIT=2048M
+            - JDJ_APP_DEV_PERMITTED=true
+            - PHP_XDEBUG_REMOTE_AUTOSTART=${PHP_XDEBUG_REMOTE_AUTOSTART}
+            - PHP_XDEBUG_REMOTE_ENABLE=${PHP_XDEBUG_REMOTE_ENABLE}
+        networks:
+            - jedisjeux
+        working_dir: /var/www/jedisjeux
+        user: ${CURRENT_UID}
+
     nginx:
-        build: nginx
-        ports:
-            - 80:80
-        volumes_from:
-            - php
+        image: nginx:latest
         volumes:
-            - ./logs/nginx/:/var/log/nginx
+          - ${PWD}/.docker/nginx/upstream.conf:/etc/nginx/conf.d/upstream.conf
+          - ${PWD}/.docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+          - jedisjeux:/var/www/jedisjeux
+        ports:
+            - "8081:8080" # The Web UI (enabled by --api)
+            - "81:80" # The HTTP port
+        networks:
+          - jedisjeux
+
     elk:
         image: willdurand/elk:kibana-5.x
         ports:
             - 81:80
+            - 9201:9200
         volumes:
             - ./elk/logstash:/etc/logstash
             - ./elk/logstash/patterns:/opt/logstash/patterns
         volumes_from:
             - php
             - nginx
+
+volumes:
+    jedisjeux:
+        driver_opts:
+            type: none
+            device: $PWD/jedisjeux
+            o: bind
+
+networks:
+    jedisjeux: ~
