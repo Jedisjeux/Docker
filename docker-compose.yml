@@ -47,7 +47,7 @@ services:
     elk:
         image: willdurand/elk:kibana-5.x
         ports:
-            - 81:80
+            - 82:80
             - 9201:9200
         volumes:
             - ./elk/logstash:/etc/logstash
