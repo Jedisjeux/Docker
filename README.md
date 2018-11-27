@@ -73,7 +73,7 @@ Inside the standard Jedisjeux modify the behat.yml.dist adding the following:
 default:
     extensions:
         Behat\MinkExtension:
-            base_url: "http://nginx/app_test.php"
+            base_url: "http://nginx"
             sessions:
                 selenium2:
                     selenium2:
@@ -82,7 +82,7 @@ default:
 And run Behat:
 
 ```bash
-    $ docker-compose run --rm php bin/behat
+    $ docker-compose run --rm php vendor/bin/behat
 ```
 ## License
 
@@ -91,5 +91,5 @@ This bundle is published under the [MIT License](LICENSE)
 ## Contributing
 
 First of all, **thank you** for contributing ♥  
-If you find any typo/misconfiguration/... please send me a PR or open an issue. You can also ping me on [twitter](https://twitter.com/nietzscheson).  
+If you find any typo/misconfiguration/... please send me a PR or open an issue.  
 Also, while creating your Pull Request on GitHub, please write a description which gives the context and/or explains why you are creating it.

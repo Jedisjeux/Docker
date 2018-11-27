@@ -2,14 +2,14 @@ version: '2'
 
 services:
     db:
-        image: mysql
+        image: mysql:5.6
         environment:
             MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
             MYSQL_DATABASE: ${MYSQL_DATABASE}
             MYSQL_USER: ${MYSQL_USER}
             MYSQL_PASSWORD: ${MYSQL_PASSWORD}
         volumes:
-            - ${PWD}/var/lib/mysql:/var/lib/mysql
+            - ${PWD}/var/lib/mysql56-data:/var/lib/mysql
         networks:
             - jedisjeux
 
@@ -39,8 +39,8 @@ services:
           - ${PWD}/.docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
           - jedisjeux:/var/www/jedisjeux
         ports:
-            - "8081:8080" # The Web UI (enabled by --api)
-            - "81:80" # The HTTP port
+            - "${WEB_UI_PORT}:8080" # The Web UI (enabled by --api)
+            - "${HTTP_PORT}:80" # The HTTP port
         networks:
           - jedisjeux
 
@@ -48,7 +48,7 @@ services:
         image: willdurand/elk:kibana-5.x
         ports:
             - 82:80
-            - 9201:9200
+            - ${TCP_UDP_PORT}:9200
         volumes:
             - ./elk/logstash:/etc/logstash
             - ./elk/logstash/patterns:/opt/logstash/patterns
