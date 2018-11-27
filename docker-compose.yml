@@ -30,7 +30,6 @@ services:
         networks:
             - jedisjeux
         working_dir: /var/www/jedisjeux
-        user: ${CURRENT_UID}
 
     nginx:
         image: nginx:latest
