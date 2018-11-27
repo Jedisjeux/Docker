@@ -12,8 +12,6 @@ before_install:
   - sudo mv docker-compose /usr/local/bin
   - docker-compose -v
   - docker -v
-  # jedisjeux application folder
-  - mkdir jedisjeux
   - cp .env.dist .env
   - cat docker-compose.yml
 
