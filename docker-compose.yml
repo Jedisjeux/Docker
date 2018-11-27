@@ -44,7 +44,7 @@ services:
           - jedisjeux
 
     node:
-        image: node:6.14.3-alpine
+        image: node:8.11.4-alpine
         volumes:
             - jedisjeux:/var/www/jedisjeux
         working_dir: /var/www/jedisjeux
