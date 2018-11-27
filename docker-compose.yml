@@ -43,6 +43,12 @@ services:
         networks:
           - jedisjeux
 
+    node:
+        image: node:8.11.4-alpine
+        volumes:
+            - jedisjeux:/var/www/jedisjeux
+        working_dir: /var/www/jedisjeux
+
     elk:
         image: willdurand/elk:kibana-5.x
         ports:
