@@ -16,6 +16,7 @@ before_install:
   - cat docker-compose.yml
 
 script:
+  - git clone https://github.com/Jedisjeux/Jedisjeux.git jedisjeux
   - docker-compose build
   - docker-compose up -d
-  - docker-compose ps
+  - docker-compose run --rm php composer install --prefer-dist -n
